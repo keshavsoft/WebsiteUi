@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Whisper WebGPU</title>
+</head>
+
+<body>
+    <h1>Whisper in Browser (WebGPU)</h1>
+    <button id="start">Start</button>
+    <button id="stop">Stop</button>
+    <pre id="output"></pre>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+
+        async function recordSpeechAndSave(text) {
+            try {
+                // Step 1: Capture the Audio Stream (may require user interaction to select source)
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); // Or try to capture system audio if supported
+
+                // Step 2: Record the Stream
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' }); // Adjust type as needed
+                    const audioUrl = URL.createObjectURL(audioBlob);
+
+                    // Step 5: Save the Blob
+                    const a = document.createElement('a');
+                    a.href = audioUrl;
+                    a.download = 'synthesized_speech.wav';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(audioUrl);
+                    audioChunks = []; // Clear chunks for next recording
+                };
+
+                // Step 3: Initiate Speech Synthesis
+                mediaRecorder.start();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.onend = () => {
+                    // Step 4: Stop Recording
+                    mediaRecorder.stop();
+                };
+                window.speechSynthesis.speak(utterance);
+
+            } catch (err) {
+                console.error('Error capturing audio or synthesizing speech:', err);
+            }
+        }
+
+        // Example usage:
+        recordSpeechAndSave("Hello, this is a test of saving synthesized speech.").then();
+    </script>
+</body>
+
+</html>

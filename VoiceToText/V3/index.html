@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+</head>
+
+<body>
+
+    <button id="start">Start Listening</button>
+    <button id="stop">Stop</button>
+    <p id="output"></p>
+
+    <script>
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+
+        let isListening = false;
+        let fullTranscript = "";
+        const output = document.getElementById("output");
+
+        // Handle incoming text
+        recognition.onresult = (event) => {
+            let interim = "";
+
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                if (event.results[i].isFinal) {
+                    let sentence = event.results[i][0].transcript;
+                    sentence = autoPunctuate(sentence);
+                    fullTranscript += sentence + " ";
+                } else {
+                    interim += event.results[i][0].transcript;
+                }
+            }
+
+            output.textContent = fullTranscript + " " + interim;
+        };
+
+        // Auto-restart when recognition unexpectedly stops
+        recognition.onend = () => {
+            if (isListening) recognition.start();
+        };
+
+        // Start
+        document.getElementById("start").onclick = () => {
+            if (!isListening) {
+                isListening = true;
+                fullTranscript = "";
+                recognition.start();
+            }
+        };
+
+        // Stop
+        document.getElementById("stop").onclick = () => {
+            isListening = false;
+            recognition.stop();
+        };
+
+        function autoPunctuate(text) {
+            text = text.trim();
+
+            // Question detection
+            if (/(who|what|when|where|why|how)\b.*$/i.test(text) && !text.endsWith("?")) {
+                return text + "?";
+            }
+
+            // Add period if missing at end of final sentences
+            if (!text.endsWith(".") && !text.endsWith("!") && !text.endsWith("?")) {
+                return text + ".";
+            }
+
+            return text;
+        }
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Text to Speech | KeshavSoft</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: "#eff6ff",
+                            100: "#dbeafe",
+                            500: "#3b82f6",
+                            600: "#2563eb",
+                            700: "#1d4ed8",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
+    <!-- Small extra CSS -->
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.5);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center p-4">
+    <div class="w-full max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight">
+                    Text to Speech Studio
+                </h1>
+                <p class="text-sm sm:text-base text-slate-300">
+                    Paste your text, choose a voice, and generate natural-sounding audio.
+                </p>
+            </div>
+            <div class="flex gap-2 items-center">
+                <span class="px-3 py-1 rounded-full text-xs sm:text-sm bg-slate-800 border border-slate-700">
+                    Powered by Web Speech API
+                </span>
+            </div>
+        </header>
+
+        <!-- Main layout -->
+        <main class="grid gap-4 lg:grid-cols-[2fr,1.2fr]">
+            <!-- Left: Text input + controls -->
+            <section
+                class="bg-slate-900/60 border border-slate-700/70 rounded-2xl p-4 sm:p-6 shadow-lg shadow-slate-900/40 backdrop-blur">
+                <!-- Text input toolbar -->
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-medium uppercase tracking-wide text-slate-400">
+                            Input Text
+                        </span>
+                        <span
+                            class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
+                            Max ~ 5000 chars
+                        </span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <button id="btnSampleText"
+                            class="px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 hover:bg-slate-700 transition">
+                            Insert sample
+                        </button>
+
+                        <label
+                            class="cursor-pointer px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 hover:bg-slate-700 transition">
+                            <span>Import .txt</span>
+                            <input type="file" id="fileInput" accept=".txt" class="hidden" />
+                        </label>
+
+                        <button id="btnClear"
+                            class="px-2.5 py-1 rounded-full border border-rose-500/70 text-rose-200 hover:bg-rose-500/10 transition">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Textarea -->
+                <div class="relative">
+                    <textarea id="textInput"
+                        class="w-full h-52 sm:h-64 resize-none rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-3 text-sm sm:text-base outline-none focus:ring-2 focus:ring-primary-500/70 focus:border-transparent placeholder:text-slate-500"
+                        placeholder="Type or paste the text you want to convert to speech..."></textarea>
+
+                    <!-- Character counter -->
+                    <div class="absolute bottom-2 right-3 text-[11px] text-slate-400">
+                        <span id="charCount">0</span>/<span id="charLimit">5000</span>
+                    </div>
+                </div>
+
+                <!-- Voice & playback controls -->
+                <div class="mt-5 grid gap-4 lg:grid-cols-2">
+                    <!-- Voice settings -->
+                    <div class="space-y-3">
+                        <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                            Voice Settings
+                            <span class="text-[10px] font-normal text-slate-400">language · voice · speed · pitch</span>
+                        </h2>
+
+                        <!-- Language & Voice -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="flex flex-col gap-1.5">
+                                <label for="languageSelect" class="text-xs font-medium text-slate-300">Language</label>
+                                <select id="languageSelect"
+                                    class="text-sm rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500/70">
+                                    <option value="en-IN">English (India)</option>
+                                    <option value="en-US">English (US)</option>
+                                    <option value="en-GB">English (UK)</option>
+                                    <option value="te-IN">Telugu (India)</option>
+                                    <option value="hi-IN">Hindi (India)</option>
+                                </select>
+                            </div>
+
+                            <div class="flex flex-col gap-1.5">
+                                <label for="voiceSelect" class="text-xs font-medium text-slate-300">Voice</label>
+                                <select id="voiceSelect"
+                                    class="text-sm rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500/70">
+                                    <option value="">Default (browser)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Speed slider -->
+                        <div class="flex flex-col gap-1.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <label for="rateRange" class="font-medium text-slate-300">Speaking Speed</label>
+                                <span class="text-slate-400">
+                                    <span id="rateValue">1.0</span>x
+                                </span>
+                            </div>
+                            <input id="rateRange" type="range" min="0.5" max="2" step="0.1" value="1"
+                                class="w-full accent-primary-500" />
+                            <div class="flex justify-between text-[11px] text-slate-500">
+                                <span>Slow</span>
+                                <span>Normal</span>
+                                <span>Fast</span>
+                            </div>
+                        </div>
+
+                        <!-- Pitch slider -->
+                        <div class="flex flex-col gap-1.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <label for="pitchRange" class="font-medium text-slate-300">Pitch</label>
+                                <span class="text-slate-400" id="pitchValue">1.0</span>
+                            </div>
+                            <input id="pitchRange" type="range" min="0" max="2" step="0.1" value="1"
+                                class="w-full accent-primary-500" />
+                            <div class="flex justify-between text-[11px] text-slate-500">
+                                <span>Low</span>
+                                <span>Normal</span>
+                                <span>High</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Playback panel -->
+                    <div class="space-y-3">
+                        <h2 class="text-sm font-semibold text-slate-200 flex items-center justify-between">
+                            Playback
+                            <span class="text-[10px] font-normal text-slate-400">preview · loop</span>
+                        </h2>
+
+                        <div
+                            class="h-full rounded-xl border border-slate-700 bg-gradient-to-br from-slate-900/80 to-slate-900/40 p-4 flex flex-col justify-between gap-3">
+                            <!-- Timeline -->
+                            <div>
+                                <div class="flex justify-between items-center mb-1 text-[11px] text-slate-400">
+                                    <span id="currentTime">00:00</span>
+                                    <span id="totalTime">--:--</span>
+                                </div>
+                                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                                    <div id="progressBar" class="h-full w-0 bg-primary-500 transition-all"></div>
+                                </div>
+                            </div>
+
+                            <!-- Main controls -->
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-2">
+                                    <button id="btnPlay"
+                                        class="w-10 h-10 rounded-full bg-primary-600 hover:bg-primary-700 flex items-center justify-center text-sm font-semibold shadow-lg shadow-primary-500/30 disabled:opacity-40 disabled:cursor-not-allowed">
+                                        ▶
+                                    </button>
+
+                                    <button id="btnPause"
+                                        class="w-9 h-9 rounded-full border border-slate-600 bg-slate-900 hover:bg-slate-800 flex items-center justify-center text-xs disabled:opacity-40 disabled:cursor-not-allowed">
+                                        ❚❚
+                                    </button>
+
+                                    <button id="btnStop"
+                                        class="w-9 h-9 rounded-full border border-slate-600 bg-slate-900 hover:bg-slate-800 flex items-center justify-center text-xs disabled:opacity-40 disabled:cursor-not-allowed">
+                                        ■
+                                    </button>
+                                </div>
+
+                                <div class="flex items-center gap-2 text-[11px] text-slate-300">
+                                    <label class="inline-flex items-center gap-1 cursor-pointer">
+                                        <input id="loopToggle" type="checkbox"
+                                            class="w-3.5 h-3.5 rounded border-slate-500 bg-slate-900 text-primary-500 focus:ring-0" />
+                                        <span>Loop</span>
+                                    </label>
+
+                                    <button id="btnDownload"
+                                        class="ml-3 px-3 py-1.5 rounded-full bg-slate-100 text-slate-900 text-xs font-medium hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed"
+                                        title="Browser Web Speech API cannot export audio files" disabled>
+                                        Download Audio
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="text-[11px] text-slate-400 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" id="statusDot"></span>
+                                    <span id="statusText">Ready</span>
+                                </div>
+                                <span id="engineInfo" class="hidden sm:inline">
+                                    Engine: <span class="font-mono">window.speechSynthesis</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right: History / Saved Clips -->
+            <aside
+                class="bg-slate-900/60 border border-slate-700/70 rounded-2xl p-4 sm:p-5 shadow-lg shadow-slate-900/40 backdrop-blur flex flex-col">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-slate-100">
+                            Saved Clips
+                        </h2>
+                        <p class="text-xs text-slate-400">
+                            Reuse previously generated text presets.
+                        </p>
+                    </div>
+                    <button id="btnClearHistory"
+                        class="text-[11px] px-2 py-1 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-800">
+                        Clear all
+                    </button>
+                </div>
+
+                <div id="historyList" class="flex-1 space-y-2 overflow-y-auto pr-1 custom-scrollbar text-sm">
+                    <!-- Generated by JS -->
+                </div>
+
+                <div class="mt-3 text-[11px] text-slate-500 border-t border-slate-800 pt-2">
+                    Note: Browser Web Speech API plays audio directly and does not expose raw audio data for download.
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- JS: Web Speech wiring -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const support = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+
+            // UI elements
+            const textInput = document.getElementById("textInput");
+            const charCount = document.getElementById("charCount");
+            const charLimit = document.getElementById("charLimit");
+            const btnSampleText = document.getElementById("btnSampleText");
+            const btnClear = document.getElementById("btnClear");
+            const fileInput = document.getElementById("fileInput");
+
+            const languageSelect = document.getElementById("languageSelect");
+            const voiceSelect = document.getElementById("voiceSelect");
+            const rateRange = document.getElementById("rateRange");
+            const pitchRange = document.getElementById("pitchRange");
+            const rateValue = document.getElementById("rateValue");
+            const pitchValue = document.getElementById("pitchValue");
+
+            const btnPlay = document.getElementById("btnPlay");
+            const btnPause = document.getElementById("btnPause");
+            const btnStop = document.getElementById("btnStop");
+            const loopToggle = document.getElementById("loopToggle");
+            const btnDownload = document.getElementById("btnDownload");
+
+            const currentTimeEl = document.getElementById("currentTime");
+            const totalTimeEl = document.getElementById("totalTime");
+            const progressBar = document.getElementById("progressBar");
+
+            const statusDot = document.getElementById("statusDot");
+            const statusText = document.getElementById("statusText");
+            const engineInfo = document.getElementById("engineInfo");
+
+            const historyList = document.getElementById("historyList");
+            const btnClearHistory = document.getElementById("btnClearHistory");
+
+            const MAX_CHARS = 5000;
+            charLimit.textContent = MAX_CHARS;
+
+            const state = {
+                voices: [],
+                currentUtterance: null,
+                isPlaying: false,
+                isPaused: false,
+                estimatedDurationSec: 0,
+                history: [],
+            };
+
+            function setStatus(text, type = "ok") {
+                statusText.textContent = text;
+                statusDot.className = "w-1.5 h-1.5 rounded-full";
+                if (type === "ok") statusDot.classList.add("bg-emerald-400");
+                else if (type === "warn") statusDot.classList.add("bg-amber-400");
+                else statusDot.classList.add("bg-rose-400");
+            }
+
+            function formatTime(sec) {
+                if (!sec || !isFinite(sec) || sec <= 0) return "--:--";
+                const m = Math.floor(sec / 60);
+                const s = Math.floor(sec % 60);
+                return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+            }
+
+            function updateCharCount() {
+                let value = textInput.value;
+                if (value.length > MAX_CHARS) {
+                    value = value.slice(0, MAX_CHARS);
+                    textInput.value = value;
+                }
+                charCount.textContent = value.length;
+            }
+
+            textInput.addEventListener("input", updateCharCount);
+
+            btnSampleText.addEventListener("click", () => {
+                textInput.value = `Welcome to KeshavSoft Text to Speech Studio.
+This demo uses the built-in browser Web Speech API.
+Play with the language, voice, speed and pitch settings to hear the difference.`;
+                updateCharCount();
+            });
+
+            btnClear.addEventListener("click", () => {
+                textInput.value = "";
+                updateCharCount();
+                window.speechSynthesis?.cancel();
+                state.isPlaying = false;
+                state.isPaused = false;
+                state.currentUtterance = null;
+                resetTimeline();
+                refreshButtons();
+                setStatus("Ready");
+            });
+
+            fileInput.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    textInput.value = String(ev.target.result || "").slice(0, MAX_CHARS);
+                    updateCharCount();
+                };
+                reader.readAsText(file);
+            });
+
+            rateRange.addEventListener("input", () => {
+                rateValue.textContent = rateRange.value;
+            });
+
+            pitchRange.addEventListener("input", () => {
+                pitchValue.textContent = pitchRange.value;
+            });
+
+            function resetTimeline() {
+                progressBar.style.width = "0%";
+                currentTimeEl.textContent = "00:00";
+                totalTimeEl.textContent = "--:--";
+                state.estimatedDurationSec = 0;
+            }
+
+            function refreshButtons() {
+                const hasText = textInput.value.trim().length > 0;
+                btnPlay.disabled = !support || !hasText;
+                btnPause.disabled = !support || !state.isPlaying;
+                btnStop.disabled = !support || (!state.isPlaying && !state.isPaused);
+            }
+
+            textInput.addEventListener("input", refreshButtons);
+
+            // ---- History (metadata only, not audio) ----
+            function loadHistory() {
+                try {
+                    const raw = localStorage.getItem("ttsHistory");
+                    state.history = raw ? JSON.parse(raw) : [];
+                } catch {
+                    state.history = [];
+                }
+            }
+
+            function saveHistory() {
+                try {
+                    localStorage.setItem("ttsHistory", JSON.stringify(state.history));
+                } catch {
+                    /* ignore */
+                }
+            }
+
+            function renderHistory() {
+                historyList.innerHTML = "";
+                if (!state.history.length) {
+                    const empty = document.createElement("p");
+                    empty.className = "text-xs text-slate-500";
+                    empty.textContent = "No saved clips yet. Generate speech to save presets.";
+                    historyList.appendChild(empty);
+                    return;
+                }
+
+                state.history
+                    .slice()
+                    .reverse()
+                    .forEach((item) => {
+                        const article = document.createElement("article");
+                        article.className =
+                            "group border border-slate-700 rounded-xl p-3 bg-slate-900/70 hover:bg-slate-800/80 transition";
+
+                        const header = document.createElement("div");
+                        header.className = "flex justify-between gap-2 mb-1.5";
+
+                        const title = document.createElement("h3");
+                        title.className = "text-xs font-semibold text-slate-100 line-clamp-1";
+                        title.textContent = item.title || "Untitled";
+
+                        const meta = document.createElement("span");
+                        meta.className = "text-[10px] text-slate-400";
+                        meta.textContent = `${item.lang} · ${item.rate.toFixed(1)}x`;
+
+                        header.appendChild(title);
+                        header.appendChild(meta);
+
+                        const snippet = document.createElement("p");
+                        snippet.className = "text-[11px] text-slate-300 line-clamp-2 mb-2";
+                        snippet.textContent = item.text.slice(0, 140) + (item.text.length > 140 ? "…" : "");
+
+                        const footer = document.createElement("div");
+                        footer.className = "flex items-center justify-between text-[11px] text-slate-400";
+
+                        const dur = document.createElement("span");
+                        dur.textContent = formatTime(item.durationSec || 0);
+
+                        const buttons = document.createElement("div");
+                        buttons.className = "flex gap-1.5 opacity-0 group-hover:opacity-100 transition";
+
+                        const playBtn = document.createElement("button");
+                        playBtn.className = "px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700";
+                        playBtn.textContent = "Play";
+                        playBtn.addEventListener("click", (ev) => {
+                            ev.stopPropagation();
+                            textInput.value = item.text.slice(0, MAX_CHARS);
+                            updateCharCount();
+                            languageSelect.value = item.lang;
+                            rateRange.value = item.rate;
+                            rateValue.textContent = item.rate.toFixed(1);
+                            pitchRange.value = item.pitch;
+                            pitchValue.textContent = item.pitch.toFixed(1);
+                            refreshButtons();
+                            speak();
+                        });
+
+                        const useTextBtn = document.createElement("button");
+                        useTextBtn.className = "px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700";
+                        useTextBtn.textContent = "Use Text";
+                        useTextBtn.addEventListener("click", (ev) => {
+                            ev.stopPropagation();
+                            textInput.value = item.text.slice(0, MAX_CHARS);
+                            updateCharCount();
+                            languageSelect.value = item.lang;
+                            rateRange.value = item.rate;
+                            rateValue.textContent = item.rate.toFixed(1);
+                            pitchRange.value = item.pitch;
+                            pitchValue.textContent = item.pitch.toFixed(1);
+                            refreshButtons();
+                        });
+
+                        buttons.appendChild(playBtn);
+                        buttons.appendChild(useTextBtn);
+
+                        footer.appendChild(dur);
+                        footer.appendChild(buttons);
+
+                        article.appendChild(header);
+                        article.appendChild(snippet);
+                        article.appendChild(footer);
+
+                        historyList.appendChild(article);
+                    });
+            }
+
+            btnClearHistory.addEventListener("click", () => {
+                state.history = [];
+                saveHistory();
+                renderHistory();
+            });
+
+            // ---- Voices ----
+            function populateVoices() {
+                if (!support) return;
+                const voices = window.speechSynthesis.getVoices().sort((a, b) => a.name.localeCompare(b.name));
+                state.voices = voices;
+
+                const selectedLang = languageSelect.value;
+                voiceSelect.innerHTML = '<option value="">Default (browser)</option>';
+
+                const filtered = voices.filter((v) => v.lang === selectedLang);
+                filtered.forEach((voice) => {
+                    const opt = document.createElement("option");
+                    opt.value = voice.name;
+                    opt.textContent = `${voice.name} (${voice.lang})`;
+                    voiceSelect.appendChild(opt);
+                });
+
+                // If no voice for that language, show all as fallback
+                if (!filtered.length) {
+                    voices.forEach((voice) => {
+                        const opt = document.createElement("option");
+                        opt.value = voice.name;
+                        opt.textContent = `${voice.name} (${voice.lang})`;
+                        voiceSelect.appendChild(opt);
+                    });
+                }
+            }
+
+            if (support) {
+                populateVoices();
+                if (typeof speechSynthesis !== "undefined") {
+                    speechSynthesis.onvoiceschanged = populateVoices;
+                }
+                engineInfo.classList.remove("hidden");
+            } else {
+                setStatus("Web Speech API not supported in this browser", "error");
+                btnPlay.disabled = true;
+                btnPause.disabled = true;
+                btnStop.disabled = true;
+            }
+
+            languageSelect.addEventListener("change", populateVoices);
+
+            // ---- Speaking ----
+            function estimateDurationSecs(text, rate) {
+                const words = text.trim().split(/\s+/).filter(Boolean).length || 1;
+                const baseWpm = 180; // normal
+                const effectiveWpm = baseWpm * (rate || 1);
+                const minutes = words / effectiveWpm;
+                return minutes * 60;
+            }
+
+            function speak() {
+                if (!support) return;
+
+                const text = textInput.value.trim();
+                if (!text) {
+                    setStatus("Enter some text first", "warn");
+                    return;
+                }
+
+                // If paused, resume
+                if (window.speechSynthesis.paused) {
+                    window.speechSynthesis.resume();
+                    state.isPaused = false;
+                    state.isPlaying = true;
+                    setStatus("Playing");
+                    refreshButtons();
+                    return;
+                }
+
+                // If already speaking, cancel and restart
+                if (window.speechSynthesis.speaking) {
+                    window.speechSynthesis.cancel();
+                }
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = languageSelect.value;
+                utterance.rate = parseFloat(rateRange.value) || 1;
+                utterance.pitch = parseFloat(pitchRange.value) || 1;
+
+                const selectedVoiceName = voiceSelect.value;
+                if (selectedVoiceName) {
+                    const voice = state.voices.find((v) => v.name === selectedVoiceName);
+                    if (voice) utterance.voice = voice;
+                }
+
+                const est = estimateDurationSecs(text, utterance.rate);
+                state.estimatedDurationSec = est;
+                totalTimeEl.textContent = formatTime(est);
+
+                utterance.onstart = () => {
+                    state.isPlaying = true;
+                    state.isPaused = false;
+                    state.currentUtterance = utterance;
+                    setStatus("Playing");
+                    refreshButtons();
+                };
+
+                utterance.onend = () => {
+                    state.isPlaying = false;
+                    state.isPaused = false;
+                    state.currentUtterance = null;
+                    progressBar.style.width = "100%";
+                    currentTimeEl.textContent = formatTime(state.estimatedDurationSec);
+                    setStatus("Finished");
+
+                    // Save to history (metadata only)
+                    state.history.push({
+                        id: Date.now(),
+                        title: text.split("\n")[0].slice(0, 60),
+                        text,
+                        lang: utterance.lang,
+                        rate: utterance.rate,
+                        pitch: utterance.pitch,
+                        durationSec: state.estimatedDurationSec,
+                    });
+                    if (state.history.length > 30) state.history.shift();
+                    saveHistory();
+                    renderHistory();
+
+                    // Loop if enabled
+                    if (loopToggle.checked) {
+                        setTimeout(() => speak(), 100);
+                    } else {
+                        refreshButtons();
+                    }
+                };
+
+                utterance.onerror = (e) => {
+                    console.error("TTS error", e);
+                    state.isPlaying = false;
+                    state.isPaused = false;
+                    state.currentUtterance = null;
+                    setStatus("Error during synthesis", "error");
+                    refreshButtons();
+                };
+
+                // Approximate progress with boundary events
+                utterance.onboundary = (event) => {
+                    if (!state.estimatedDurationSec || !event.charIndex) return;
+                    const len = text.length || 1;
+                    const progress = Math.min(1, event.charIndex / len);
+                    progressBar.style.width = progress * 100 + "%";
+                    const currentSec = state.estimatedDurationSec * progress;
+                    currentTimeEl.textContent = formatTime(currentSec);
+                };
+
+                resetTimeline();
+                window.speechSynthesis.speak(utterance);
+            }
+
+            btnPlay.addEventListener("click", speak);
+
+            btnPause.addEventListener("click", () => {
+                if (!support) return;
+                if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+                    window.speechSynthesis.pause();
+                    state.isPaused = true;
+                    state.isPlaying = false;
+                    setStatus("Paused", "warn");
+                    refreshButtons();
+                }
+            });
+
+            btnStop.addEventListener("click", () => {
+                if (!support) return;
+                window.speechSynthesis.cancel();
+                state.isPaused = false;
+                state.isPlaying = false;
+                state.currentUtterance = null;
+                setStatus("Stopped");
+                resetTimeline();
+                refreshButtons();
+            });
+
+            // Initial setup
+            updateCharCount();
+            loadHistory();
+            renderHistory();
+            refreshButtons();
+            setStatus(support ? "Ready" : "Web Speech API not supported", support ? "ok" : "error");
+        });
+    </script>
+</body>
+
+</html>

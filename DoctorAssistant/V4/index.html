@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<link>
+<meta charset="UTF-8" />
+<title>KeshavCare – OPD Voice Notes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <div class="app">
+        <header class="app-header">
+            <div class="title-block">
+                <h1>KeshavCare – V50</h1>
+                <p>Capture patient complaints as final notes while you consult.</p>
+            </div>
+            <div class="status-chip">
+                <div id="statusIndicator" class="status-indicator"></div>
+                <span id="statusText">Mic is idle</span>
+            </div>
+        </header>
+
+        <!-- Patient details + language -->
+        <section class="patient-row">
+            <div class="field">
+                <label for="patientName">Patient name</label>
+                <input id="patientName" placeholder="e.g. Ramesh Kumar" />
+            </div>
+            <div class="field">
+                <label for="visitId">Visit ID / MRN</label>
+                <input id="visitId" placeholder="e.g. OPD-2403-15" />
+            </div>
+            <div class="field">
+                <label for="languageSelect">Recognition language</label>
+                <select id="languageSelect">
+                    <option value="en-IN">English (India)</option>
+                    <option value="hi-IN">Hindi</option>
+                    <option value="te-IN">Telugu</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- Main toolbar -->
+        <section class="toolbar">
+            <button id="k1" class="primary">
+                <span class="icon">🎙️</span>
+                <span id="toggleRecordLabel">Start Listening</span>
+            </button>
+
+            <button id="clearBtn" class="danger">
+                <span class="icon">🧹</span>
+                Clear all notes
+            </button>
+
+            <button id="downloadTextBtn" class="success">
+                <span class="icon">⬇️</span>
+                Download Text
+            </button>
+
+            <button id="downloadAudioBtn">
+                <span class="icon">🎧</span>
+                Download Audio
+            </button>
+        </section>
+
+        <!-- 2-column layout: Live + Final notes -->
+        <section class="layout">
+            <!-- Left: live dictation -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Live dictation</div>
+                        <div class="card-subtitle">Temporary text while patient is speaking</div>
+                    </div>
+                </div>
+                <div id="liveText" class="placeholder">
+                    Press “Start Listening” and ask the patient to speak…
+                </div>
+            </div>
+
+            <!-- Right: final notes with edit/delete -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Final notes</div>
+                        <div class="card-subtitle">Each line can be edited or deleted</div>
+                    </div>
+                </div>
+                <ul id="finalNotesList"></ul>
+            </div>
+        </section>
+
+        <footer class="footer-note">
+            <span>Notes and audio remain even when you pause.</span>
+        </footer>
+    </div>
+
+    <script>
+        const liveTextEl = document.getElementById("liveText");
+        const finalNotesListEl = document.getElementById("finalNotesList");
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+
+        recognition.continuous = true;        // keep listening
+        recognition.interimResults = true;    // show partial text
+        recognition.lang = "en-US";
+
+        const output = document.getElementById("liveText");
+
+        recognition.onresult = (event) => {
+            let interimTranscript = "";
+            let finalTranscript = "";
+
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const result = event.results[i];
+                const transcript = result[0].transcript.trim();
+                console.log("aaaaaaaa : ", transcript);
+                // const firstKey = Object.keys(result)[0];
+                // addNote(JSON.stringify(result));
+                addNote(transcript);
+                // liveTextEl.textContent = firstKey;
+                // if (!transcript) continue;
+
+                // if (result.isFinal) {
+                //     finalTranscript += transcript + " ";
+                // } else {
+                //     interimTranscript += transcript + " ";
+                // };
+            };
+
+            // liveTextEl.textContent = finalTranscript + interimTranscript;
+            // liveTextEl.classList.remove("placeholder");
+
+
+            // if (finalTranscript) {
+            //     const sentences = splitIntoSentences(finalTranscript);
+            //     sentences.forEach((s) => addNote(s));
+            //     liveTextEl.textContent = "";
+            //     liveTextEl.classList.add("placeholder");
+            // };
+        };
+
+        function splitIntoSentences(text) {
+            return text
+                .split(/(?<=[.?!।])\s+/)
+                .map((s) => s.trim())
+                .filter((s) => s.length > 0);
+        };
+
+        document.getElementById("k1").onclick = () => recognition.start();
+        // document.getElementById("stop").onclick = () => recognition.stop();
+
+        // ---- FINAL NOTES: ADD / EDIT / DELETE ----
+        function addNote(text) {
+            if (!text) return;
+
+            const li = document.createElement("li");
+            li.classList.add("note-item");
+
+            const textSpan = document.createElement("span");
+            textSpan.classList.add("note-text");
+            textSpan.textContent = text;
+
+            const actions = document.createElement("div");
+            actions.classList.add("note-actions");
+
+            const editBtn = document.createElement("button");
+            editBtn.type = "button";
+            editBtn.className = "icon-btn edit";
+            editBtn.title = "Edit this line";
+            editBtn.textContent = "✏️";
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.type = "button";
+            deleteBtn.className = "icon-btn delete";
+            deleteBtn.title = "Delete this line";
+            deleteBtn.textContent = "🗑️";
+
+            // EDIT NOTE
+            editBtn.addEventListener("click", () => {
+                const oldText = textSpan.textContent;
+                const updated = prompt("Edit note:", oldText);
+                if (updated === null) return;
+                const newText = updated.trim();
+                if (!newText) return;
+                textSpan.textContent = newText;
+            });
+
+            // DELETE NOTE
+            deleteBtn.addEventListener("click", () => {
+                li.remove();
+            });
+
+            actions.appendChild(editBtn);
+            actions.appendChild(deleteBtn);
+            li.appendChild(textSpan);
+            li.appendChild(actions);
+            finalNotesListEl.appendChild(li);
+        };
+
+    </script>
+
+</body>
+
+</html>

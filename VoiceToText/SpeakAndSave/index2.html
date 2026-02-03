@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+</head>
+
+<body>
+
+    <button id="start">Start Listening</button>
+    <button id="stop">Stop</button>
+    <p id="output"></p>
+
+    <script>
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        let lastResultTime = Date.now();
+
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+
+        let isListening = false;
+        let fullTranscript = "";
+        const output = document.getElementById("output");
+
+        // Handle incoming text
+        recognition.onresult = (event) => {
+            let interim = "";
+
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                if (event.results[i].isFinal) {
+                    const now = Date.now();
+                    let sentence = event.results[i][0].transcript.trim();
+
+                    // Detect long pause → new sentence
+                    if (now - lastResultTime > 1200) {
+                        // Long pause → end previous sentence
+                        if (!fullTranscript.trim().endsWith(".") &&
+                            !fullTranscript.trim().endsWith("?") &&
+                            !fullTranscript.trim().endsWith("!")) {
+                            fullTranscript = fullTranscript.trim() + ". ";
+                        }
+                    }
+
+                    // Basic punctuation rules
+                    sentence = autoPunctuate(sentence);
+
+                    fullTranscript += sentence + " ";
+                    lastResultTime = now;
+                };
+            };
+
+            output.textContent = fullTranscript + " " + interim;
+        };
+
+        // Auto-restart when recognition unexpectedly stops
+        recognition.onend = () => {
+            if (isListening) recognition.start();
+        };
+
+        // Start
+        document.getElementById("start").onclick = () => {
+            if (!isListening) {
+                isListening = true;
+                fullTranscript = "";
+                recognition.start();
+            }
+        };
+
+        // Stop
+        document.getElementById("stop").onclick = () => {
+            isListening = false;
+            recognition.stop();
+        };
+
+        function autoPunctuate(text) {
+            text = text.trim();
+
+            // Question detection
+            if (/(who|what|when|where|why|how)\b.*$/i.test(text) && !text.endsWith("?")) {
+                return text + "?";
+            }
+
+            // Add period if missing at end of final sentences
+            if (!text.endsWith(".") && !text.endsWith("!") && !text.endsWith("?")) {
+                return text + ".";
+            }
+
+            return text;
+        };
+
+        let mediaRecorder;
+        let audioChunks = [];
+
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    audio.play();
+
+                    // Create a download link
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = audioUrl;
+                    downloadLink.download = 'recording.webm'; // Save as webm
+                    downloadLink.click();
+                };
+
+                // Start recording
+                mediaRecorder.start();
+            });
+
+    </script>
+</body>
+
+</html>

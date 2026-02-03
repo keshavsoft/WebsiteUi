@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>KeshavCare – OPD Voice Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        /* ================= ROOT ================= */
+        :root {
+            --brand: #0f766e;
+            --bg: #f8fafc;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #e5e7eb;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app {
+            max-width: 960px;
+            width: 100%;
+            margin: 10px;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .15);
+            padding: 12px;
+        }
+
+        /* ================= HEADER ================= */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            border-bottom: 2px solid #000;
+            padding-bottom: 6px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.3rem;
+            color: var(--brand);
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: gray;
+        }
+
+        .dot.recording {
+            background: red;
+            box-shadow: 0 0 0 6px rgba(255, 0, 0, .25);
+        }
+
+        /* ================= PATIENT ROW ================= */
+        .patient-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 700px) {
+            .patient-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        input,
+        select {
+            padding: 7px 10px;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            font-size: 0.9rem;
+        }
+
+        /* ================= TOOLBAR ================= */
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        button {
+            border: none;
+            border-radius: 20px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .primary {
+            background: var(--brand);
+            color: white;
+        }
+
+        .danger {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        /* ================= OPD SHEET ================= */
+        .sheet {
+            border: 2px solid #000;
+            font-family: "Times New Roman", serif;
+            margin-top: 6px;
+        }
+
+        .sheet-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px;
+            border-bottom: 2px solid #000;
+            font-size: 0.9rem;
+        }
+
+        .section {
+            border-bottom: 1px solid #000;
+            padding: 6px;
+        }
+
+        .section h3 {
+            margin: 0 0 4px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        li.note-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+            margin-bottom: 2px;
+        }
+
+        .note-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        /* Section selector */
+        .section-select {
+            padding: 6px;
+            border-bottom: 1px solid #000;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- HEADER -->
+        <div class="header">
+            <h1>KeshavCare – OPD Voice Notes</h1>
+            <div class="status">
+                <div id="statusDot" class="dot"></div>
+                <span id="statusText">Mic idle</span>
+            </div>
+        </div>
+
+        <!-- PATIENT -->
+        <div class="patient-row">
+            <input id="patientName" placeholder="Patient name">
+            <input id="visitId" placeholder="Visit ID">
+            <select id="languageSelect">
+                <option value="en-IN">English</option>
+                <option value="hi-IN">Hindi</option>
+                <option value="te-IN">Telugu</option>
+            </select>
+        </div>
+
+        <!-- TOOLBAR -->
+        <div class="toolbar">
+            <button id="toggleBtn" class="primary">🎙 Start Listening</button>
+
+            <button id="clearBtn" class="danger">🧹 Clear</button>
+        </div>
+
+        <!-- OPD SHEET -->
+        <div class="sheet">
+
+            <div class="sheet-header">
+                <div>
+                    <strong>Name:</strong> <span id="rxName">—</span><br>
+                    <strong>Visit:</strong> <span id="rxVisit">—</span>
+                </div>
+                <div>
+                    <strong>Date:</strong> <span id="rxDate"></span>
+                </div>
+            </div>
+
+            <div class="section-select">
+                Dictate into:
+                <select id="activeSection">
+                    <option value="complaints">Complaints</option>
+                    <option value="history">History</option>
+                    <option value="exam">Examination</option>
+                    <option value="investigations">Investigations</option>
+                    <option value="advice">Advice</option>
+                </select>
+            </div>
+
+            <div class="section">
+                <h3>1. Complaints</h3>
+                <ul id="complaints"></ul>
+            </div>
+
+            <div class="section">
+                <h3>2. History</h3>
+                <ul id="history"></ul>
+            </div>
+
+            <div class="section">
+                <h3>3. Examination</h3>
+                <ul id="exam"></ul>
+            </div>
+
+            <div class="section">
+                <h3>4. Investigations</h3>
+                <ul id="investigations"></ul>
+            </div>
+
+            <div class="section">
+                <h3>5. Advice / Treatment</h3>
+                <ul id="advice"></ul>
+            </div>
+
+            <!-- IMPORTANT: keep finalNotesList (speech depends on it) -->
+            <ul id="finalNotesList" hidden></ul>
+
+        </div>
+    </div>
+
+    <script>
+        /* ================= SPEECH ================= */
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.lang = "en-IN";
+
+        let recognizing = false;
+
+        recognition.onresult = (event) => {
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                if (event.results[i].isFinal) {
+                    addNote(event.results[i][0].transcript.trim());
+                }
+            }
+        };
+
+        /* ================= UI ================= */
+        const toggleBtn = document.getElementById("toggleBtn");
+        const dot = document.getElementById("statusDot");
+        const statusText = document.getElementById("statusText");
+
+        toggleBtn.onclick = () => {
+            if (recognizing) {
+                recognition.stop();
+                recognizing = false;
+            } else {
+                recognition.lang = document.getElementById("languageSelect").value;
+                recognition.start();
+                recognizing = true;
+            }
+            updateUI();
+        };
+
+        function updateUI() {
+            if (recognizing) {
+                dot.classList.add("recording");
+                statusText.textContent = "Listening…";
+                toggleBtn.textContent = "⏸ Pause Listening";
+            } else {
+                dot.classList.remove("recording");
+                statusText.textContent = "Mic idle";
+                toggleBtn.textContent = "🎙 Start Listening";
+            }
+        }
+
+        /* ================= NOTES ================= */
+        function addNote(text) {
+            if (!text) return;
+
+            // Keep finalNotesList untouched
+            document.getElementById("finalNotesList")
+                .appendChild(document.createElement("li")).textContent = text;
+
+            const section = document.getElementById("activeSection").value;
+            const ul = document.getElementById(section);
+
+            const li = document.createElement("li");
+            li.className = "note-item";
+
+            const span = document.createElement("span");
+            span.textContent = text;
+
+            const actions = document.createElement("div");
+            actions.className = "note-actions";
+
+            const edit = document.createElement("button");
+            edit.textContent = "✏️";
+            edit.onclick = () => {
+                const updated = prompt("Edit note", span.textContent);
+                if (updated) span.textContent = updated;
+            };
+
+            const del = document.createElement("button");
+            del.textContent = "🗑️";
+            del.onclick = () => li.remove();
+
+            actions.append(edit, del);
+            li.append(span, actions);
+            ul.appendChild(li);
+        }
+
+        /* ================= HELPERS ================= */
+        document.getElementById("rxDate").textContent =
+            new Date().toLocaleDateString();
+
+        patientName.oninput = e => rxName.textContent = e.target.value || "—";
+        visitId.oninput = e => rxVisit.textContent = e.target.value || "—";
+
+        document.getElementById("clearBtn").onclick = () => {
+            document.querySelectorAll(".section ul").forEach(u => u.innerHTML = "");
+            document.getElementById("finalNotesList").innerHTML = "";
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+</head>
+
+<body>
+
+    <button id="start">Start Listening</button>
+    <button id="stop">Stop</button>
+    <p id="output"></p>
+
+    <script>
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+
+        recognition.continuous = true;        // keep listening
+        recognition.interimResults = true;    // show partial text
+        recognition.lang = "en-US";
+
+        const output = document.getElementById("output");
+
+        recognition.onresult = (event) => {
+            let transcript = "";
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
+            output.textContent = transcript;
+            console.log("aaaaaaaa : ", transcript);
+
+        };
+
+        document.getElementById("start").onclick = () => recognition.start();
+        document.getElementById("stop").onclick = () => recognition.stop();
+
+    </script>
+</body>
+
+</html>

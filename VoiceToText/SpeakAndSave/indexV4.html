@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Speak & Save – Text to Speech Recorder</title>
+    <link rel="stylesheet" href="fab_back.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at top, #1f2937, #020617);
+            color: #e5e7eb;
+        }
+
+        .app {
+            background: rgba(15, 23, 42, 0.96);
+            border-radius: 18px;
+            padding: 24px 28px;
+            max-width: 720px;
+            width: 100%;
+            box-shadow:
+                0 18px 45px rgba(0, 0, 0, 0.55),
+                0 0 0 1px rgba(148, 163, 184, 0.15);
+        }
+
+
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .app-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            color: #9ca3af;
+            white-space: nowrap;
+        }
+
+        .subtitle {
+            margin-top: 6px;
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+
+        .field-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 140px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(15, 23, 42, 0.85);
+            color: #e5e7eb;
+            padding: 10px 12px;
+            resize: vertical;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5);
+        }
+
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 10px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
+        }
+
+        button:active {
+            transform: translateY(1px) scale(0.99);
+        }
+
+        #speakSaveBtn {
+            background: linear-gradient(135deg, #38bdf8, #22c55e);
+            color: #020617;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.35);
+        }
+
+        #stopBtn {
+            background: rgba(248, 113, 113, 0.12);
+            color: #fecaca;
+            border: 1px solid rgba(248, 113, 113, 0.6);
+        }
+
+        #stopBtn[disabled] {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .status {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            min-height: 18px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            margin-right: 6px;
+            display: inline-block;
+        }
+
+        .status-idle .status-dot {
+            background: #6b7280;
+        }
+
+        .status-recording .status-dot {
+            background: #22c55e;
+            animation: pulse 1s infinite;
+        }
+
+        .status-error .status-dot {
+            background: #f97373;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.4);
+                opacity: 0.4;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+        }
+
+        .hint {
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="fab-back" onclick="goBack()">⮜</button>
+
+    <div class="app">
+        <div class="app-header">
+            <div>
+                <div class="app-title">Speak & Save</div>
+                <div class="subtitle">
+                    Type text → Browser speaks → Audio is recorded → Download as WAV.
+                </div>
+            </div>
+            <div class="badge">Experimental</div>
+        </div>
+
+        <div style="margin-top: 18px;">
+            <div class="field-label">Text</div>
+            <textarea id="textInput"
+                placeholder="Type what you want to hear...">Hello, this demo reads your text aloud and downloads the recording.</textarea>
+        </div>
+
+        <div class="controls-row">
+            <div class="button-group">
+                <button id="speakSaveBtn">▶️ Speak & Save</button>
+                <button id="stopBtn" disabled>⏹ Stop</button>
+            </div>
+            <div id="status" class="status status-idle">
+                <span class="status-dot"></span>
+                Ready to begin.
+            </div>
+        </div>
+
+        <div class="hint">
+            Uses <code>getUserMedia</code> + <code>SpeechSynthesis</code>.
+        </div>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let currentStream;
+
+        const speakSaveBtn = document.getElementById('speakSaveBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const textInput = document.getElementById('textInput');
+        const statusEl = document.getElementById('status');
+
+        function goBack() {
+            window.history.back();   // Replace with custom navigation if needed
+        }
+
+        function setStatus(message, mode = 'idle') {
+            statusEl.textContent = '';
+            const dot = document.createElement('span');
+            dot.className = 'status-dot';
+            statusEl.className = 'status';
+            statusEl.classList.add('status-' + mode);
+            statusEl.appendChild(dot);
+            statusEl.appendChild(document.createTextNode(message));
+        }
+
+        function stopStreamTracks() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(t => t.stop());
+                currentStream = null;
+            }
+        }
+
+        async function speakAndSave() {
+            const text = textInput.value.trim();
+            if (!text) {
+                setStatus('Enter text first!', 'error');
+                return;
+            }
+
+            window.speechSynthesis.cancel();
+
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(currentStream);
+
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+
+                    const a = document.createElement('a');
+                    a.href = audioUrl;
+                    a.download = 'spoken-text.wav';
+                    a.click();
+                    URL.revokeObjectURL(audioUrl);
+
+                    stopStreamTracks();
+                    stopBtn.disabled = true;
+                    speakSaveBtn.disabled = false;
+                    setStatus('Done! Downloaded.', 'idle');
+                };
+
+                mediaRecorder.start();
+                stopBtn.disabled = false;
+                speakSaveBtn.disabled = true;
+                setStatus('Speaking & recording...', 'recording');
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.onend = () => mediaRecorder.stop();
+                window.speechSynthesis.speak(utterance);
+
+            } catch (err) {
+                console.error(err);
+                setStatus('Error: microphone or speech issue', 'error');
+            }
+        }
+
+        function stopAll() {
+            window.speechSynthesis.cancel();
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            } else {
+                stopStreamTracks();
+            }
+            stopBtn.disabled = true;
+            speakSaveBtn.disabled = false;
+            setStatus('Stopped.', 'idle');
+        }
+
+        speakSaveBtn.addEventListener('click', speakAndSave);
+        stopBtn.addEventListener('click', stopAll);
+    </script>
+
+</body>
+
+</html>

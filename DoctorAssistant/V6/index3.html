@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>KeshavCare – V52 OPD</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        :root {
+            --brand-main: #0f766e;
+            --brand-dark: #115e59;
+            --accent: #0ea5e9;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #e0f2fe, #f9fafb, #e5e7eb);
+            display: flex;
+            justify-content: center;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .app {
+            max-width: 980px;
+            width: 100%;
+            margin: 14px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, .14);
+            padding: 18px;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: var(--brand-dark);
+        }
+
+        .header p {
+            margin: 4px 0 0;
+            font-size: .85rem;
+            color: #6b7280;
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .78rem;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #ecfeff;
+            border: 1px solid #bae6fd;
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #9ca3af;
+        }
+
+        .status-dot.recording {
+            background: #ef4444;
+            box-shadow: 0 0 0 6px rgba(239, 68, 68, .25);
+        }
+
+        /* PATIENT */
+        .patient-row {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1.5fr;
+            gap: 10px;
+            margin: 14px 0;
+        }
+
+        @media (max-width: 700px) {
+            .patient-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            font-size: .9rem;
+        }
+
+        /* GLOBAL TOOLBAR */
+        .global-toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        button {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: .9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .primary {
+            background: var(--brand-main);
+            color: white;
+        }
+
+        .danger {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        /* OPD SECTIONS */
+        .sheet {
+            display: grid;
+            gap: 12px;
+        }
+
+        .section-card {
+            border: 2px solid #000;
+            border-radius: 10px;
+            padding: 10px;
+            font-family: "Times New Roman", serif;
+            transition: box-shadow .2s;
+        }
+
+        .section-card.active {
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, .4);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #000;
+            padding-bottom: 6px;
+            margin-bottom: 6px;
+        }
+
+        .section-header h3 {
+            margin: 0;
+            font-size: .95rem;
+            text-transform: uppercase;
+        }
+
+        .section-header button {
+            font-size: .8rem;
+        }
+
+        .section ul {
+            padding-left: 18px;
+            margin: 0;
+        }
+
+        .note-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 2px;
+        }
+
+        .note-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <h1>KeshavCare – V52</h1>
+                <p>Dictate patient notes section-wise during consultation.</p>
+            </div>
+            <div class="status-chip">
+                <div id="statusDot" class="status-dot"></div>
+                <span id="statusText">Mic is idle</span>
+            </div>
+        </div>
+
+        <!-- PATIENT -->
+        <div class="patient-row">
+            <input id="patientName" placeholder="Patient name">
+            <input id="visitId" placeholder="Visit ID / MRN">
+            <select id="languageSelect">
+                <option value="en-IN">English</option>
+                <option value="hi-IN">Hindi</option>
+                <option value="te-IN">Telugu</option>
+            </select>
+        </div>
+
+        <!-- GLOBAL -->
+        <div class="global-toolbar">
+            <button id="clearBtn" class="danger">🧹 Clear all</button>
+            <button id="downloadBtn" class="success">⬇ Download Text</button>
+        </div>
+
+        <!-- SECTIONS -->
+        <div class="sheet">
+
+            <div class="section-card" data-section="complaints">
+                <div class="section-header">
+                    <h3>1. Complaints</h3>
+                    <button class="primary section-mic" data-section="complaints">
+                        🎙 Start Listening
+                    </button>
+                </div>
+                <ul id="complaints"></ul>
+            </div>
+
+            <div class="section-card" data-section="history">
+                <div class="section-header">
+                    <h3>2. History</h3>
+                    <button class="primary section-mic" data-section="complaints">
+                        🎙 Start Listening
+                    </button>
+                </div>
+                <ul id="history"></ul>
+            </div>
+
+            <div class="section-card" data-section="exam">
+                <div class="section-header">
+                    <h3>3. Examination</h3>
+                    <button class="primary section-mic" data-section="complaints">
+                        🎙 Start Listening
+                    </button>
+                </div>
+                <ul id="exam"></ul>
+            </div>
+
+            <div class="section-card" data-section="investigations">
+                <div class="section-header">
+                    <h3>4. Investigations</h3>
+                    <button class="primary section-mic" data-section="complaints">
+                        🎙 Start Listening
+                    </button>
+                </div>
+                <ul id="investigations"></ul>
+            </div>
+
+            <div class="section-card" data-section="advice">
+                <div class="section-header">
+                    <h3>5. Advice</h3>
+                    <button class="primary section-mic" data-section="complaints">
+                        🎙 Start Listening
+                    </button>
+                </div>
+                <ul id="advice"></ul>
+            </div>
+
+            <!-- Required -->
+            <ul id="finalNotesList" hidden></ul>
+        </div>
+
+    </div>
+
+    <script>
+        /* ================= SPEECH ================= */
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.interimResults = false;
+        recognition.continuous = false; // safest mode
+
+        let recognizing = false;
+        let activeSection = null;
+        let activeButton = null;
+
+        /* 🔑 SESSION CONTROL (CRUCIAL FIX) */
+        let sessionCounter = 0;
+        let activeSessionId = null;
+
+        const micButtons = document.querySelectorAll(".section-mic");
+
+        /* ================= RESULT HANDLER ================= */
+        recognition.onresult = (e) => {
+            // ❌ Ignore stale results
+            if (activeSessionId !== sessionCounter) return;
+            if (!activeSection) return;
+
+            const result = e.results[e.results.length - 1];
+            if (!result.isFinal) return;
+
+            const text = result[0].transcript.trim();
+            if (!text) return;
+
+            addNote(text);
+        };
+
+        /* ================= SAFARI SUPPORT ================= */
+        recognition.onend = () => {
+            // No auto-restart – restart only via button
+        };
+
+        /* ================= BUTTON HANDLING ================= */
+        micButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const section = btn.dataset.section;
+
+                // ⏸ Pause if same section clicked
+                if (recognizing && activeSection === section) {
+                    stopRecording();
+                    return;
+                }
+
+                // ▶ Start fresh for selected section
+                startRecording(section, btn);
+            });
+        });
+
+        /* ================= CORE LOGIC ================= */
+        function startRecording(section, button) {
+            /* 1️⃣ HARD STOP previous recognition */
+            try { recognition.abort(); } catch { }
+
+            recognizing = false;
+
+            /* 2️⃣ NEW SESSION */
+            sessionCounter++;
+            activeSessionId = sessionCounter;
+
+            /* 3️⃣ Reset previous button */
+            if (activeButton) {
+                activeButton.textContent = "🎙 Start Listening";
+            }
+
+            /* 4️⃣ Set active section */
+            activeSection = section;
+            activeButton = button;
+
+            /* 5️⃣ UI updates */
+            highlightSection(section);
+            button.textContent = "⏸ Pause Listening";
+            updateStatus(true);
+
+            /* 6️⃣ Start recognition */
+            recognition.lang = languageSelect.value;
+            recognition.start();
+            recognizing = true;
+        }
+
+        function stopRecording() {
+            try { recognition.abort(); } catch { }
+
+            recognizing = false;
+            activeSection = null;
+            activeSessionId = null;
+
+            if (activeButton) {
+                activeButton.textContent = "🎙 Start Listening";
+                activeButton = null;
+            }
+
+            clearHighlights();
+            updateStatus(false);
+        }
+
+        /* ================= UI HELPERS ================= */
+        function updateStatus(on) {
+            statusDot.classList.toggle("recording", on);
+            statusText.textContent = on ? "Listening…" : "Mic is idle";
+        }
+
+        function highlightSection(section) {
+            document.querySelectorAll(".section-card").forEach(c =>
+                c.classList.remove("active")
+            );
+
+            document
+                .querySelector(`[data-section="${section}"]`)
+                .classList.add("active");
+        }
+
+        function clearHighlights() {
+            document.querySelectorAll(".section-card").forEach(c =>
+                c.classList.remove("active")
+            );
+        }
+
+        /* ================= NOTES ================= */
+        function addNote(text) {
+            // Keep internal list (do not remove)
+            finalNotesList.appendChild(document.createElement("li")).textContent = text;
+
+            const ul = document.getElementById(activeSection);
+            if (!ul) return;
+
+            const li = document.createElement("li");
+            li.className = "note-item";
+
+            const span = document.createElement("span");
+            span.textContent = text;
+
+            const actions = document.createElement("div");
+            actions.className = "note-actions";
+
+            const edit = document.createElement("button");
+            edit.textContent = "✏️";
+            edit.onclick = () => {
+                const updated = prompt("Edit note:", span.textContent);
+                if (updated) span.textContent = updated;
+            };
+
+            const del = document.createElement("button");
+            del.textContent = "🗑️";
+            del.onclick = () => li.remove();
+
+            actions.append(edit, del);
+            li.append(span, actions);
+            ul.appendChild(li);
+        }
+    </script>
+
+
+
+</body>
+
+</html>

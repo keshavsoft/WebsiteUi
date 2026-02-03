@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Whisper WebGPU</title>
+</head>
+
+<body>
+    <h1>Whisper in Browser (WebGPU)</h1>
+    <button id="start">Start</button>
+    <button id="stop">Stop</button>
+    <pre id="output"></pre>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    audio.play();
+
+                    // Create a download link
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = audioUrl;
+                    downloadLink.download = 'recording.webm'; // Save as webm
+                    downloadLink.click();
+                };
+
+                // Start recording
+                mediaRecorder.start();
+            });
+
+    </script>
+</body>
+
+</html>

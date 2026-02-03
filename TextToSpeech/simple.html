@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Text to Speech | KeshavSoft</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Optional: Tailwind config for custom colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: "#eff6ff",
+                            100: "#dbeafe",
+                            500: "#3b82f6",
+                            600: "#2563eb",
+                            700: "#1d4ed8",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+
+<body class="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center p-4">
+    <div class="w-full max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight">
+                    Text to Speech Studio
+                </h1>
+                <p class="text-sm sm:text-base text-slate-300">
+                    Paste your text, choose a voice, and generate natural-sounding audio.
+                </p>
+            </div>
+            <div class="flex gap-2 items-center">
+                <span class="px-3 py-1 rounded-full text-xs sm:text-sm bg-slate-800 border border-slate-700">
+                    Powered by Web Speech / API
+                </span>
+            </div>
+        </header>
+
+        <!-- Main layout -->
+        <main class="grid gap-4 lg:grid-cols-[2fr,1.2fr]">
+            <!-- Left: Text input + controls -->
+            <section
+                class="bg-slate-900/60 border border-slate-700/70 rounded-2xl p-4 sm:p-6 shadow-lg shadow-slate-900/40 backdrop-blur">
+                <!-- Text input toolbar -->
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-medium uppercase tracking-wide text-slate-400">
+                            Input Text
+                        </span>
+                        <span
+                            class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
+                            Max ~ 5000 chars
+                        </span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <button id="btnSampleText"
+                            class="px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 hover:bg-slate-700 transition">
+                            Insert sample
+                        </button>
+
+                        <label
+                            class="cursor-pointer px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 hover:bg-slate-700 transition">
+                            <span>Import .txt</span>
+                            <input type="file" id="fileInput" accept=".txt" class="hidden" />
+                        </label>
+
+                        <button id="btnClear"
+                            class="px-2.5 py-1 rounded-full border border-rose-500/70 text-rose-200 hover:bg-rose-500/10 transition">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Textarea -->
+                <div class="relative">
+                    <textarea id="textInput"
+                        class="w-full h-52 sm:h-64 resize-none rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-3 text-sm sm:text-base outline-none focus:ring-2 focus:ring-primary-500/70 focus:border-transparent placeholder:text-slate-500"
+                        placeholder="Type or paste the text you want to convert to speech..."></textarea>
+
+                    <!-- Character counter -->
+                    <div class="absolute bottom-2 right-3 text-[11px] text-slate-400">
+                        <span id="charCount">0</span>/<span id="charLimit">5000</span>
+                    </div>
+                </div>
+
+                <!-- Voice & playback controls -->
+                <div class="mt-5 grid gap-4 lg:grid-cols-2">
+                    <!-- Voice settings -->
+                    <div class="space-y-3">
+                        <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                            Voice Settings
+                            <span class="text-[10px] font-normal text-slate-400">language · voice · speed · pitch</span>
+                        </h2>
+
+                        <!-- Language & Voice -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="flex flex-col gap-1.5">
+                                <label for="languageSelect" class="text-xs font-medium text-slate-300">Language</label>
+                                <select id="languageSelect"
+                                    class="text-sm rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500/70">
+                                    <option value="en-IN">English (India)</option>
+                                    <option value="en-US">English (US)</option>
+                                    <option value="en-GB">English (UK)</option>
+                                    <option value="te-IN">Telugu (India)</option>
+                                    <option value="hi-IN">Hindi (India)</option>
+                                </select>
+                            </div>
+
+                            <div class="flex flex-col gap-1.5">
+                                <label for="voiceSelect" class="text-xs font-medium text-slate-300">Voice</label>
+                                <select id="voiceSelect"
+                                    class="text-sm rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500/70">
+                                    <option value="">Default</option>
+                                    <!-- Populate dynamically -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Speed slider -->
+                        <div class="flex flex-col gap-1.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <label for="rateRange" class="font-medium text-slate-300">Speaking Speed</label>
+                                <span class="text-slate-400">
+                                    <span id="rateValue">1.0</span>x
+                                </span>
+                            </div>
+                            <input id="rateRange" type="range" min="0.5" max="2" step="0.1" value="1"
+                                class="w-full accent-primary-500" />
+                            <div class="flex justify-between text-[11px] text-slate-500">
+                                <span>Slow</span>
+                                <span>Normal</span>
+                                <span>Fast</span>
+                            </div>
+                        </div>
+
+                        <!-- Pitch slider -->
+                        <div class="flex flex-col gap-1.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <label for="pitchRange" class="font-medium text-slate-300">Pitch</label>
+                                <span class="text-slate-400" id="pitchValue">1.0</span>
+                            </div>
+                            <input id="pitchRange" type="range" min="0" max="2" step="0.1" value="1"
+                                class="w-full accent-primary-500" />
+                            <div class="flex justify-between text-[11px] text-slate-500">
+                                <span>Low</span>
+                                <span>Normal</span>
+                                <span>High</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Playback panel -->
+                    <div class="space-y-3">
+                        <h2 class="text-sm font-semibold text-slate-200 flex items-center justify-between">
+                            Playback
+                            <span class="text-[10px] font-normal text-slate-400">preview · download · loop</span>
+                        </h2>
+
+                        <div
+                            class="h-full rounded-xl border border-slate-700 bg-gradient-to-br from-slate-900/80 to-slate-900/40 p-4 flex flex-col justify-between gap-3">
+                            <!-- Timeline (visual only) -->
+                            <div>
+                                <div class="flex justify-between items-center mb-1 text-[11px] text-slate-400">
+                                    <span id="currentTime">00:00</span>
+                                    <span id="totalTime">--:--</span>
+                                </div>
+                                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                                    <div id="progressBar" class="h-full w-0 bg-primary-500 transition-all"></div>
+                                </div>
+                            </div>
+
+                            <!-- Main controls -->
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-2">
+                                    <button id="btnPlay"
+                                        class="w-10 h-10 rounded-full bg-primary-600 hover:bg-primary-700 flex items-center justify-center text-sm font-semibold shadow-lg shadow-primary-500/30 disabled:opacity-40 disabled:cursor-not-allowed">
+                                        ▶
+                                    </button>
+
+                                    <button id="btnPause"
+                                        class="w-9 h-9 rounded-full border border-slate-600 bg-slate-900 hover:bg-slate-800 flex items-center justify-center text-xs disabled:opacity-40 disabled:cursor-not-allowed">
+                                        ❚❚
+                                    </button>
+
+                                    <button id="btnStop"
+                                        class="w-9 h-9 rounded-full border border-slate-600 bg-slate-900 hover:bg-slate-800 flex items-center justify-center text-xs disabled:opacity-40 disabled:cursor-not-allowed">
+                                        ■
+                                    </button>
+                                </div>
+
+                                <div class="flex items-center gap-2 text-[11px] text-slate-300">
+                                    <label class="inline-flex items-center gap-1 cursor-pointer">
+                                        <input id="loopToggle" type="checkbox"
+                                            class="w-3.5 h-3.5 rounded border-slate-500 bg-slate-900 text-primary-500 focus:ring-0" />
+                                        <span>Loop</span>
+                                    </label>
+
+                                    <button id="btnDownload"
+                                        class="ml-3 px-3 py-1.5 rounded-full bg-slate-100 text-slate-900 text-xs font-medium hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed">
+                                        Download Audio
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="text-[11px] text-slate-400 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" id="statusDot"></span>
+                                    <span id="statusText">Ready</span>
+                                </div>
+                                <span id="engineInfo" class="hidden sm:inline">
+                                    Engine: <span class="font-mono">web-speech</span> (placeholder)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right: History / Saved Clips -->
+            <aside
+                class="bg-slate-900/60 border border-slate-700/70 rounded-2xl p-4 sm:p-5 shadow-lg shadow-slate-900/40 backdrop-blur flex flex-col">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-slate-100">
+                            Saved Clips
+                        </h2>
+                        <p class="text-xs text-slate-400">
+                            Reuse previously generated audio.
+                        </p>
+                    </div>
+                    <button id="btnClearHistory"
+                        class="text-[11px] px-2 py-1 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-800">
+                        Clear all
+                    </button>
+                </div>
+
+                <div id="historyList" class="flex-1 space-y-2 overflow-y-auto pr-1 custom-scrollbar text-sm">
+                    <!-- Example item -->
+                    <!--
+          <article
+            class="group border border-slate-700 rounded-xl p-3 bg-slate-900/70 hover:bg-slate-800/80 cursor-pointer transition"
+          >
+            <div class="flex justify-between gap-2 mb-1.5">
+              <h3 class="text-xs font-semibold text-slate-100 line-clamp-1">
+                Welcome message for my website
+              </h3>
+              <span class="text-[10px] text-slate-400">en-IN · 1.0x</span>
+            </div>
+            <p class="text-[11px] text-slate-300 line-clamp-2 mb-2">
+              Thank you for visiting our website. We are excited to show you our latest features…
+            </p>
+            <div class="flex items-center justify-between text-[11px] text-slate-400">
+              <span>0:21</span>
+              <div class="flex gap-1.5 opacity-0 group-hover:opacity-100 transition">
+                <button class="px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700">
+                  Play
+                </button>
+                <button class="px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700">
+                  Use Text
+                </button>
+              </div>
+            </div>
+          </article>
+          -->
+                </div>
+
+                <div class="mt-3 text-[11px] text-slate-500 border-t border-slate-800 pt-2">
+                    Tip: You can store generated audio metadata here (title, language, rate, duration) and play it
+                    later using your backend or local storage.
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Optional: you can write your JS in a separate file and use the IDs above -->
+    <!-- <script src="app.js"></script> -->
+</body>
+
+</html>

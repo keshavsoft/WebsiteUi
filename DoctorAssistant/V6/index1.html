@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>KeshavCare – V51 OPD</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        :root {
+            --brand-main: #0f766e;
+            --brand-main-dark: #115e59;
+            --brand-accent: #0ea5e9;
+            --bg-card: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #e0f2fe 0, #f9fafb 45%, #e5e7eb 100%);
+            display: flex;
+            justify-content: center;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .app {
+            max-width: 960px;
+            width: 100%;
+            margin: 14px;
+            background: var(--bg-card);
+            border-radius: 18px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
+            padding: 18px;
+        }
+
+        /* HEADER */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .title-block h1 {
+            margin: 0;
+            color: var(--brand-main-dark);
+        }
+
+        .title-block p {
+            margin: 4px 0 0;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.78rem;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #ecfeff;
+            border: 1px solid #bae6fd;
+        }
+
+        .status-indicator {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #9ca3af;
+        }
+
+        .status-indicator.recording {
+            background: #ef4444;
+            box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.25);
+        }
+
+        /* PATIENT ROW */
+        .patient-row {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1.5fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        @media (max-width: 700px) {
+            .patient-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .field label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            font-size: 0.9rem;
+        }
+
+        /* TOOLBAR */
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 14px 0;
+        }
+
+        button {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .primary {
+            background: var(--brand-main);
+            color: #fff;
+        }
+
+        .danger {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .neutral {
+            background: #e5e7eb;
+        }
+
+        /* OPD SHEET */
+        .sheet {
+            border: 2px solid #000;
+            font-family: "Times New Roman", serif;
+        }
+
+        .sheet-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 2px solid #000;
+        }
+
+        .section-select {
+            padding: 6px 8px;
+            border-bottom: 1px solid #000;
+            font-size: 0.85rem;
+        }
+
+        .section {
+            border-bottom: 1px solid #000;
+            padding: 6px 8px;
+        }
+
+        .section h3 {
+            margin: 0 0 4px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .section ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .note-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .note-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+
+        <header class="app-header">
+            <div class="title-block">
+                <h1>KeshavCare – V51</h1>
+                <p>Capture patient complaints as final notes while you consult.</p>
+            </div>
+            <div class="status-chip">
+                <div id="statusIndicator" class="status-indicator"></div>
+                <span id="statusText">Mic is idle</span>
+            </div>
+        </header>
+
+        <section class="patient-row">
+            <div class="field">
+                <label>Patient name</label>
+                <input id="patientName" placeholder="e.g. Ramesh Kumar">
+            </div>
+            <div class="field">
+                <label>Visit ID / MRN</label>
+                <input id="visitId" placeholder="e.g. OPD-2403-15">
+            </div>
+            <div class="field">
+                <label>Recognition language</label>
+                <select id="languageSelect">
+                    <option value="en-IN">English (India)</option>
+                    <option value="hi-IN">Hindi</option>
+                    <option value="te-IN">Telugu</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="toolbar">
+            <button id="toggleBtn" class="primary">🎙 Start Listening</button>
+            <button id="clearBtn" class="danger">🧹 Clear all notes</button>
+            <button id="downloadTextBtn" class="success">⬇ Download Text</button>
+            <button class="neutral">🎧 Download Audio</button>
+        </section>
+
+        <div class="sheet">
+            <div class="sheet-header">
+                <div>
+                    <strong>Name:</strong> <span id="rxName">—</span><br>
+                    <strong>Visit:</strong> <span id="rxVisit">—</span>
+                </div>
+                <div>
+                    <strong>Date:</strong> <span id="rxDate"></span>
+                </div>
+            </div>
+
+            <div class="section-select">
+                Dictate into:
+                <select id="activeSection">
+                    <option value="complaints">Complaints</option>
+                    <option value="history">History</option>
+                    <option value="exam">Examination</option>
+                    <option value="investigations">Investigations</option>
+                    <option value="advice">Advice</option>
+                </select>
+            </div>
+
+            <div class="section">
+                <h3>Complaints</h3>
+                <ul id="complaints"></ul>
+            </div>
+            <div class="section">
+                <h3>History</h3>
+                <ul id="history"></ul>
+            </div>
+            <div class="section">
+                <h3>Examination</h3>
+                <ul id="exam"></ul>
+            </div>
+            <div class="section">
+                <h3>Investigations</h3>
+                <ul id="investigations"></ul>
+            </div>
+            <div class="section">
+                <h3>Advice</h3>
+                <ul id="advice"></ul>
+            </div>
+
+            <!-- REQUIRED FOR SPEECH -->
+            <ul id="finalNotesList" hidden></ul>
+        </div>
+
+    </div>
+
+    <script>
+        /* SPEECH */
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.interimResults = false;
+        recognition.continuous = true;
+
+        let recognizing = false;
+
+        recognition.onresult = e => {
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+                if (e.results[i].isFinal) {
+                    addNote(e.results[i][0].transcript.trim());
+                }
+            }
+        };
+
+        /* 🔥 iPhone Safari FIX */
+        recognition.onend = () => {
+            if (recognizing) {
+                try {
+                    recognition.start();
+                } catch (e) { }
+            }
+        };
+
+        /* UI */
+        toggleBtn.onclick = () => {
+            if (recognizing) {
+                recognition.stop();
+                recognizing = false;
+            } else {
+                recognition.lang = languageSelect.value;
+                recognition.start();
+                recognizing = true;
+            }
+            updateUI();
+        };
+
+        function updateUI() {
+            if (recognizing) {
+                statusIndicator.classList.add("recording");
+                statusText.textContent = "Listening…";
+                toggleBtn.textContent = "⏸ Pause Listening";
+            } else {
+                statusIndicator.classList.remove("recording");
+                statusText.textContent = "Mic is idle";
+                toggleBtn.textContent = "🎙 Start Listening";
+            }
+        }
+
+        /* NOTES */
+        function addNote(text) {
+            if (!text) return;
+
+            finalNotesList.appendChild(document.createElement("li")).textContent = text;
+
+            const ul = document.getElementById(activeSection.value);
+            const li = document.createElement("li");
+            li.className = "note-item";
+
+            const span = document.createElement("span");
+            span.textContent = text;
+
+            const actions = document.createElement("div");
+            actions.className = "note-actions";
+
+            const edit = document.createElement("button");
+            edit.textContent = "✏️";
+            edit.onclick = () => {
+                const updated = prompt("Edit note:", span.textContent);
+                if (updated) span.textContent = updated;
+            };
+
+            const del = document.createElement("button");
+            del.textContent = "🗑️";
+            del.onclick = () => li.remove();
+
+            actions.append(edit, del);
+            li.append(span, actions);
+            ul.appendChild(li);
+        }
+
+        /* HELPERS */
+        rxDate.textContent = new Date().toLocaleDateString();
+        patientName.oninput = e => rxName.textContent = e.target.value || "—";
+        visitId.oninput = e => rxVisit.textContent = e.target.value || "—";
+
+        clearBtn.onclick = () => {
+            document.querySelectorAll(".section ul").forEach(u => u.innerHTML = "");
+            finalNotesList.innerHTML = "";
+        };
+
+        downloadTextBtn.onclick = () => {
+            let text = "";
+            document.querySelectorAll(".section").forEach(sec => {
+                text += sec.querySelector("h3").innerText + "\n";
+                sec.querySelectorAll("li span").forEach(li => {
+                    text += "- " + li.innerText + "\n";
+                });
+                text += "\n";
+            });
+            const blob = new Blob([text], { type: "text/plain" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "OPD_Notes.txt";
+            a.click();
+        };
+    </script>
+
+</body>
+
+</html>
