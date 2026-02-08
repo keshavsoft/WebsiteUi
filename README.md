@@ -13,3 +13,7 @@ This project will have Ui in Our Works folder of our website
 ### 1.1.3
 
 - GoldEstimation Version started
+
+### 1.1.4
+
+- DocCure V2 started with Search param
