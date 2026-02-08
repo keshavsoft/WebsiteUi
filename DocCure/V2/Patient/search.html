@@ -594,7 +594,7 @@
 			clone.querySelector(".price").textContent = doc.price;
 
 			const jVarLocalBookAppointmentClass = clone.querySelector(".BookAppointmentClass");
-			jVarLocalBookAppointmentClass.href += `?${doc.id}`;
+			jVarLocalBookAppointmentClass.href = `booking.html?id=${doc.id}`;
 			console.log("aaaaaaaaaa : ", jVarLocalBookAppointmentClass.href);
 
 			// debugger;
