@@ -1,0 +1,4 @@
+{
+    "GetEndPoint": "https://bcast.svbcgold.in:7768/VOTSBroadcastStreaming/Services/xml/GetLiveRateByTemplateID/svbc",
+    "GetEndPoint1": "https://www.goldapi.io/api/XAU/USD"
+}

@@ -17,3 +17,7 @@ This project will have Ui in Our Works folder of our website
 ### 1.1.4
 
 - DocCure V2 started with Search param
+
+### 1.1.5
+
+- Gold Stones with stones perfect
