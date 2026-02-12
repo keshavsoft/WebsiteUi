@@ -169,7 +169,7 @@
 											<img src="../assets/img/doctors/doctor-thumb-02.jpg" alt="User Image">
 										</a>
 										<div class="booking-info">
-											<h4><a href="doctor-profile.html">Dr. Darren Elder</a></h4>
+											<h4><span id="doctorIdText"></span></h4>
 											<div class="rating">
 												<i class="fas fa-star filled"></i>
 												<i class="fas fa-star filled"></i>
@@ -502,7 +502,13 @@
 		<script src="../assets/js/bootstrap.min.js"></script>
 		
 		<!-- Custom JS -->
-		<script src="../assets/js/script.js"></script>
+		<script>
+			const params = new URLSearchParams(window.location.search);
+			const doctorId = params.get("id");
+
+			document.getElementById("doctorIdText").textContent = doctorId;
+		</script>
+
 		
 	</body>
 
